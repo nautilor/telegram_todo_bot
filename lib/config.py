@@ -12,6 +12,7 @@ class config:
         return self.config['bot']['storage_path']
 
     def get_user(self, user):
+        user = str(user)
         return self.users()[user]
 
     def get_user_capabilities(self, user):
