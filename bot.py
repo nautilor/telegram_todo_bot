@@ -44,8 +44,7 @@ def list_handler(bot, update):
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = todo_menu(todo)
-                ucompletereply_text(todos[todo]['description'], reply_markup=markup)
-
+                update.message.reply_text(todos[todo]['description'], reply_markup=markup)
     else:
         unauthorized_user(bot, update)
 
