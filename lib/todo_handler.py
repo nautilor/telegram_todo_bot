@@ -15,11 +15,10 @@ class todo_handler:
 
     def complete_todo(self, user, key):
         todos = self.get_todos(user)
-        todos[key] = todos[key]['done'] = 1
-        # TODO: update the json and reload
+        todos[key]['done'] = 1
+        self.config.update()
 
     def delete_todo(self, user, todo):
         todos = self.get_todos(user)
         todos.pop('key')
-        # TODO: update the json and reload
-
+        self.config.update()

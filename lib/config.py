@@ -27,3 +27,7 @@ class config:
 
     def get_bot_api(self):
         return self.config['bot']['api']
+
+    def update(self):
+        with open(self.config_file, 'w') as file:
+            json.dump(self.config, file)

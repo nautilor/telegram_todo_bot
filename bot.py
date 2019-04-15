@@ -49,29 +49,31 @@ def list_handler(bot, update):
         unauthorized_user(bot, update)
 
 def button(bot, update):
+    user_id = update.callback_query.from_user.id
     callback = update.callback_query
-    parse_callback_data(bot, update, callback)
+    print(user_id)
+    parse_callback_data(bot, user_id, callback)
 
 def delete_todo(user, key):
-    # TODO check if todo still exists and delete it
-    ...
+    handler.delete_todo(user, key)
 
+def done_todo(user, key):
+    handler.complete_todo(user, key)
 
-def parse_callback_data(bot, update, callback):
+def parse_callback_data(bot, user, callback):
     data = callback.data
     if 'done' == data[:4]:
         data = re.sub("done_", '', data)
-        # TODO: set todo to done
+        done_todo(user, data)
     if 'delete' == data[:6]:
         data = re.sub('delete_', '', data)
-        delete_todo(update.message.from_user.id, data)
+        delete_todo(user, data)
 
 if __name__ == "__main__":
     token = config.get_bot_api()
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(MessageHandler(Filters.document, document_handler))
     dispatcher.add_handler(CommandHandler('list', list_handler))
     dispatcher.add_handler(CommandHandler('info', info_handler))
     dispatcher.add_handler(CallbackQueryHandler(button))
