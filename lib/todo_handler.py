@@ -13,6 +13,12 @@ class todo_handler:
     def get_todos(self, user):
         return self.config.get_user(user)['todos']
 
+    def add_todo(self, user, todo):
+        key = self.generate_todo_key()
+        todos = self.get_todos(user)
+        todos['key'] = {'description': todo, 'done': 0}
+        self.config.update()
+
     def complete_todo(self, user, key):
         todos = self.get_todos(user)
         todos[key]['done'] = 1
