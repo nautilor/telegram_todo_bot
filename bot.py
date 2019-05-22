@@ -9,6 +9,8 @@ from telegram.ext import Updater, Filters, MessageHandler, CommandHandler, Callb
 from telegram.parsemode import ParseMode
 from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
+from time import sleep
+import threading
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -18,7 +20,8 @@ config = config()
 handler = todo_handler()
 auth = authorization()
 
-def delete_message(bot, chat_id, message_id):
+def delete_message(bot, chat_id, message_id, timeout=0):
+    sleep(timeout)
     bot.delete_message(chat_id=chat_id, message_id=message_id)
 
 def done_menu(key):
@@ -30,8 +33,13 @@ def todo_menu(key):
     delete = InlineKeyboardButton(text="\U00002716 Delete",callback_data="delete_%s" % key)
     return InlineKeyboardMarkup([[done, delete]])
 
+def send_and_delete(bot, chat_id, text, reply_markup=None, timeout=900): # 2700 = 45min
+    message = send_message(bot, chat_id, text, reply_markup)
+    thread = threading.Thread(target=delete_message, args=(bot, chat_id, message.message_id, timeout))
+    thread.start()
+
 def send_message(bot, chat_id, text, reply_markup=None):
-    bot.send_message(chat_id=chat_id, text=text,
+    return bot.send_message(chat_id=chat_id, text=text,
             disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
 
 def missing_todo(bot, update):
@@ -44,11 +52,12 @@ def unauthorized_user(bot, update):
 def start_handler(bot, update):
     if not auth.is_authorized(update.message.from_user.id):
         unauthorized_user(bot, update)
-    send_message(bot, update.message.chat.id, text="\U0001F60A Welcome")
+    send_and_delete(bot, update.message.chat.id, text="\U0001F60A Welcome")
     bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
 
 def info_handler(bot, update):
-    send_message(bot, update.message.chat.id,
+    delete_message(bot, update.message.chat.id, update.message.message_id)
+    send_and_delete(bot, update.message.chat.id,
             text="This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
 def list_handler(bot, update):
@@ -57,7 +66,7 @@ def list_handler(bot, update):
     if auth.is_authorized(update.message.from_user.id):
         todos = handler.get_todos(update.message.from_user.id)
         if  todos == {}:
-            send_message(bot, update.message.chat.id, '\U0000274C User %s has no TODO' % update.message.from_user.id)
+            send_and_delete(bot, update.message.chat.id, '\U0000274C User %s has no TODO' % update.message.from_user.id)
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = done_menu(todo) if todos[todo]['done'] == 1 else todo_menu(todo)
@@ -79,7 +88,7 @@ def new_handler(bot, update):
         else:
             bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
             handler.add_todo(update.message.from_user.id, todo.replace('/new ', ''))
-            send_message(bot, update.message.chat_id, "\U00002705 Todo created succesfully")
+            send_and_delete(bot, update.message.chat_id, "\U00002705 Todo created succesfully")
     else:
         unauthorized_user(bot, update)
 
