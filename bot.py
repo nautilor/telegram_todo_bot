@@ -18,6 +18,9 @@ config = config()
 handler = todo_handler()
 auth = authorization()
 
+def delete_message(bot, chat_id, message_id):
+    bot.delete_message(chat_id=chat_id, message_id=message_id)
+
 def done_menu(key):
     delete = InlineKeyboardButton(text="\U00002716 Delete", callback_data="delete_%s" % key)
     return InlineKeyboardMarkup([[delete]])
@@ -38,11 +41,18 @@ def unauthorized_user(bot, update):
     send_message(bot, update.message.chat.id,
             text="\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
+def start_handler(bot, update):
+    if not auth.is_authorized(update.message.from_user.id):
+        unauthorized_user(bot, update)
+    send_message(bot, update.message.chat.id, text="\U0001F60A Welcome")
+    bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
+
 def info_handler(bot, update):
     send_message(bot, update.message.chat.id,
             text="This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
 def list_handler(bot, update):
+    delete_message(bot, update.message.chat.id, update.message.message_id)
     logger.log(msg='list command from user %s' % update.message.from_user.id, level=logging.INFO)
     if auth.is_authorized(update.message.from_user.id):
         todos = handler.get_todos(update.message.from_user.id)
@@ -67,7 +77,9 @@ def new_handler(bot, update):
         if (todo == '/new'):
             missing_todo(bot, update)
         else:
+            bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
             handler.add_todo(update.message.from_user.id, todo.replace('/new ', ''))
+            send_message(bot, update.message.chat_id, "\U00002705 Todo created succesfully")
     else:
         unauthorized_user(bot, update)
 
@@ -83,9 +95,14 @@ def parse_callback_data(bot, user, callback):
     data = callback.data
     if 'done' == data[:4]:
         data = re.sub("done_", '', data)
+        bot.edit_message_reply_markup(chat_id=callback.message.chat_id,
+                message_id=callback.message.message_id, reply_markup=done_menu(data))
         done_todo(user, data)
+
+
     if 'delete' == data[:6]:
         data = re.sub('delete_', '', data)
+        bot.delete_message(chat_id=callback.message.chat_id, message_id=callback.message.message_id)
         delete_todo(user, data)
 
 if __name__ == "__main__":
@@ -93,6 +110,7 @@ if __name__ == "__main__":
     updater = Updater(token=token)
     dispatcher = updater.dispatcher
 
+    dispatcher.add_handler(CommandHandler('start', start_handler))
     dispatcher.add_handler(CommandHandler('list', list_handler))
     dispatcher.add_handler(CommandHandler('info', info_handler))
     dispatcher.add_handler(CommandHandler('new', new_handler))

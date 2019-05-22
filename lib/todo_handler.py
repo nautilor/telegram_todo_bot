@@ -14,17 +14,26 @@ class todo_handler:
         return self.config.get_user(user)['todos']
 
     def add_todo(self, user, todo):
-        key = self.generate_todo_key()
-        todos = self.get_todos(user)
-        todos['key'] = {'description': todo, 'done': 0}
-        self.config.update()
+        try:
+            key = self.generate_todo_key()
+            todos = self.get_todos(user)
+            todos[todo] = {'description': todo, 'done': 0}
+            self.config.update()
+        except Exception:
+            return
 
     def complete_todo(self, user, key):
-        todos = self.get_todos(user)
-        todos[key]['done'] = 1
-        self.config.update()
+        try:
+            todos = self.get_todos(user)
+            todos[key]['done'] = 1
+            self.config.update()
+        except Exception:
+            return
 
     def delete_todo(self, user, todo):
-        todos = self.get_todos(user)
-        todos.pop('key')
-        self.config.update()
+        try:
+            todos = self.get_todos(user)
+            todos.pop(todo)
+            self.config.update()
+        except Exception:
+            return
