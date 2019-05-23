@@ -43,10 +43,10 @@ def send_message(bot, chat_id, text, reply_markup=None):
             disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
 
 def missing_todo(bot, update):
-    send_message(bot, update.message.chat.id, text="\U0000274C No text provided \U0000274C")
+    send_and_delete(bot, update.message.chat.id, text="\U0000274C No text provided \U0000274C")
 
 def unauthorized_user(bot, update):
-    send_message(bot, update.message.chat.id,
+    send_and_delete(bot, update.message.chat.id,
             text="\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
 def start_handler(bot, update):
@@ -70,9 +70,41 @@ def list_handler(bot, update):
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = done_menu(todo) if todos[todo]['done'] == 1 else todo_menu(todo)
-                update.message.reply_text(todos[todo]['description'], reply_markup=markup)
+                send_and_delete(bot, update.message.chat.id, todos[todo]['description'], reply_markup=markup)
     else:
         unauthorized_user(bot, update)
+
+def add_user_handler(bot, update):
+    delete_message(bot, update.message.chat.id, update.message.message_id)
+    user = update.message.text
+    if (user == '/add_user'):
+        send_and_delete(bot, updatem.message.chat_id, "\U0000274C Missing user id")
+    else:
+        user = user.split(' ')
+        if len(user) == 3:
+            if auth.is_admin(update.message.from_user.id):
+                config.add_user(user[1], user[2])
+                send_and_delete(bot, update.message.chat_id, "\U00002705 User created succesfully")
+            else:
+                 send_and_delete(bot, update.message.chat_id, "\U0000274C You don't have the permission to do this operation")
+        else:
+            send_and_delete(bot, update.message.chat_id, "\U0000274C Wrong command arguments format")
+
+def remove_user_handler(bot, update):
+    delete_message(bot, update.message.chat.id, update.message.message_id)
+    user = update.message.text
+    if (user == '/remove_user'):
+        send_and_delete(bot, updatem.message.chat_id, "\U0000274C Missing user id")
+    else:
+        user = user.split(' ')
+        if len(user) == 2:
+            if auth.is_admin(update.message.from_user.id):
+                config.delete_user(user[1])
+                send_and_delete(bot, update.message.chat_id, "\U00002705 User deleted succesfully")
+            else:
+                 send_and_delete(bot, update.message.chat_id, "\U0000274C You don't have the permission to do this operation")
+        else:
+            send_and_delete(bot, update.message.chat_id, "\U0000274C Wrong command arguments format")
 
 def button(bot, update):
     user_id = update.callback_query.from_user.id
@@ -123,6 +155,8 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler('list', list_handler))
     dispatcher.add_handler(CommandHandler('info', info_handler))
     dispatcher.add_handler(CommandHandler('new', new_handler))
+    dispatcher.add_handler(CommandHandler('add_user', add_user_handler))
+    dispatcher.add_handler(CommandHandler('remove_user', remove_user_handler))
     dispatcher.add_handler(CallbackQueryHandler(button))
     updater.start_polling(clean=True)
 

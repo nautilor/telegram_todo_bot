@@ -6,7 +6,7 @@
     "USER_ID": {
       "id": "USER_ID",
       "username": "USERNAME",
-      "capabilities": ["EDIT", "VIEW"],
+      "capabilities": ["EDIT", "VIEW", "ADMIN"],
       "todos": {
         "TODO_KEY": {
             "description": "TODO 0",

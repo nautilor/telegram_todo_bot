@@ -17,7 +17,7 @@ class todo_handler:
         try:
             key = self.generate_todo_key()
             todos = self.get_todos(user)
-            todos[todo] = {'description': todo, 'done': 0}
+            todos[key] = {'description': todo, 'done': 0}
             self.config.update()
         except Exception:
             return
