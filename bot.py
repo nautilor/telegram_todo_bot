@@ -83,8 +83,11 @@ def add_user_handler(bot, update):
         user = user.split(' ')
         if len(user) == 3:
             if auth.is_admin(update.message.from_user.id):
-                config.add_user(user[1], user[2])
-                send_and_delete(bot, update.message.chat_id, "\U00002705 User created succesfully")
+                if not config.user_exist(user[1]):
+                    config.add_user(user[1], user[2])
+                    send_and_delete(bot, update.message.chat_id, "\U00002705 User created succesfully")
+                else:
+                    send_and_delete(bot, update.message.chat_id, "\U0000274C User already exists")
             else:
                  send_and_delete(bot, update.message.chat_id, "\U0000274C You don't have the permission to do this operation")
         else:
@@ -99,8 +102,14 @@ def remove_user_handler(bot, update):
         user = user.split(' ')
         if len(user) == 2:
             if auth.is_admin(update.message.from_user.id):
-                config.delete_user(user[1])
-                send_and_delete(bot, update.message.chat_id, "\U00002705 User deleted succesfully")
+                if str(user[1]) == str(update.message.from_user.id):
+                    send_and_delete(bot, update.message.chat_id, "\U0000274C You cannot delete yourself")
+                    return
+                if config.user_exist(user[1]):
+                    config.delete_user(user[1])
+                    send_and_delete(bot, update.message.chat_id, "\U00002705 User deleted succesfully")
+                else:
+                    send_and_delete(bot, update.message.chat_id, "\U0000274C User does not exists")
             else:
                  send_and_delete(bot, update.message.chat_id, "\U0000274C You don't have the permission to do this operation")
         else:
