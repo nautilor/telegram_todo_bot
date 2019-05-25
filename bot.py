@@ -50,8 +50,9 @@ def unauthorized_user(bot, update):
             text="\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
 def start_handler(bot, update):
+    print(update)
     bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
-    if not auth.is_authorized(update.message.from_user.id):
+    if not auth.is_authorized(update.message.chat_id):
         unauthorized_user(bot, update)
         return
     send_and_delete(bot, update.message.chat.id, text="\U0001F60A Welcome")
@@ -63,11 +64,11 @@ def info_handler(bot, update):
 
 def list_handler(bot, update):
     delete_message(bot, update.message.chat.id, update.message.message_id)
-    logger.log(msg='list command from user %s' % update.message.from_user.id, level=logging.INFO)
-    if auth.is_authorized(update.message.from_user.id):
-        todos = handler.get_todos(update.message.from_user.id)
+    logger.log(msg='list command from user %s' % update.message.chat_id, level=logging.INFO)
+    if auth.is_authorized(update.message.chat_id):
+        todos = handler.get_todos(update.message.chat_id)
         if  todos == {}:
-            send_and_delete(bot, update.message.chat.id, '\U0000274C User %s has no TODO' % update.message.from_user.id)
+            send_and_delete(bot, update.message.chat.id, '\U0000274C User %s has no TODO' % update.message.chat_id)
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = done_menu(todo) if todos[todo]['done'] == 1 else todo_menu(todo)
@@ -79,11 +80,11 @@ def add_user_handler(bot, update):
     delete_message(bot, update.message.chat.id, update.message.message_id)
     user = update.message.text
     if (user == '/add_user'):
-        send_and_delete(bot, updatem.message.chat_id, "\U0000274C Missing user id")
+        send_and_delete(bot, update.message.chat_id, "\U0000274C Missing user id")
     else:
         user = user.split(' ')
         if len(user) == 3:
-            if auth.is_admin(update.message.from_user.id):
+            if auth.is_admin(update.message.chat_id):
                 if not config.user_exist(user[1]):
                     config.add_user(user[1], user[2])
                     send_and_delete(bot, update.message.chat_id, "\U00002705 User created succesfully")
@@ -98,12 +99,12 @@ def remove_user_handler(bot, update):
     delete_message(bot, update.message.chat.id, update.message.message_id)
     user = update.message.text
     if (user == '/remove_user'):
-        send_and_delete(bot, updatem.message.chat_id, "\U0000274C Missing user id")
+        send_and_delete(bot, update.message.chat_id, "\U0000274C Missing user id")
     else:
         user = user.split(' ')
         if len(user) == 2:
-            if auth.is_admin(update.message.from_user.id):
-                if str(user[1]) == str(update.message.from_user.id):
+            if auth.is_admin(update.message.chat_id):
+                if str(user[1]) == str(update.message.chat_id):
                     send_and_delete(bot, update.message.chat_id, "\U0000274C You cannot delete yourself")
                     return
                 if config.user_exist(user[1]):
@@ -117,19 +118,19 @@ def remove_user_handler(bot, update):
             send_and_delete(bot, update.message.chat_id, "\U0000274C Wrong command arguments format")
 
 def button(bot, update):
-    user_id = update.callback_query.from_user.id
+    user_id = update.callback_query.chat_id
     callback = update.callback_query
     parse_callback_data(bot, user_id, callback)
 
 def new_handler(bot, update):
     bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
-    logger.log(msg='new todo from user %s' % update.message.from_user.id, level=logging.INFO)
-    if auth.is_authorized(update.message.from_user.id):
+    logger.log(msg='new todo from user %s' % update.message.chat_id, level=logging.INFO)
+    if auth.is_authorized(update.message.chat_id):
         todo = update.message.text
         if (todo == '/new'):
             missing_todo(bot, update)
         else:
-            handler.add_todo(update.message.from_user.id, todo.replace('/new ', ''))
+            handler.add_todo(update.message.chat_id, todo.replace('/new ', ''))
             send_and_delete(bot, update.message.chat_id, "\U00002705 Todo created succesfully")
     else:
         unauthorized_user(bot, update)

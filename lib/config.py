@@ -18,24 +18,23 @@ class config:
             self.update()
 
     def delete_user(self, user):
-        if self.user_exist(user):
+        if self.user_exist(str(user)):
             users = self.users()
-            users.pop(user)
+            users.pop(str(user))
             self.update()
 
     def user_exist(self, user):
         try:
-            self.get_user(user)
+            self.get_user(str(user))
             return True
         except Exception:
             return False
 
     def get_user(self, user):
-        user = str(user)
-        return self.users()[user]
+        return self.users()[str(user)]
 
     def get_user_capabilities(self, user):
-        return self.get_user(user)['capabilities']
+        return self.get_user(str(user))['capabilities']
 
     def load_config(self):
         self.config = open(self.config_file, 'r')
