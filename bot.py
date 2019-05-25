@@ -50,10 +50,11 @@ def unauthorized_user(bot, update):
             text="\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
 def start_handler(bot, update):
+    bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
     if not auth.is_authorized(update.message.from_user.id):
         unauthorized_user(bot, update)
+        return
     send_and_delete(bot, update.message.chat.id, text="\U0001F60A Welcome")
-    bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
 
 def info_handler(bot, update):
     delete_message(bot, update.message.chat.id, update.message.message_id)
@@ -121,13 +122,13 @@ def button(bot, update):
     parse_callback_data(bot, user_id, callback)
 
 def new_handler(bot, update):
+    bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
     logger.log(msg='new todo from user %s' % update.message.from_user.id, level=logging.INFO)
     if auth.is_authorized(update.message.from_user.id):
         todo = update.message.text
         if (todo == '/new'):
             missing_todo(bot, update)
         else:
-            bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
             handler.add_todo(update.message.from_user.id, todo.replace('/new ', ''))
             send_and_delete(bot, update.message.chat_id, "\U00002705 Todo created succesfully")
     else:
