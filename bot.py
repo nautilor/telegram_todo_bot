@@ -50,7 +50,6 @@ def unauthorized_user(bot, update):
             text="\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
 def start_handler(bot, update):
-    print(update)
     bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
     if not auth.is_authorized(update.message.chat_id):
         unauthorized_user(bot, update)
@@ -118,7 +117,7 @@ def remove_user_handler(bot, update):
             send_and_delete(bot, update.message.chat_id, "\U0000274C Wrong command arguments format")
 
 def button(bot, update):
-    user_id = update.callback_query.chat_id
+    user_id = update.callback_query.message.chat_id
     callback = update.callback_query
     parse_callback_data(bot, user_id, callback)
 
@@ -168,6 +167,6 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler('new', new_handler))
     dispatcher.add_handler(CommandHandler('add_user', add_user_handler))
     dispatcher.add_handler(CommandHandler('remove_user', remove_user_handler))
-    dispatcher.add_handler(CallbackQueryHandler(button))
+    dispatcher.add_handler(CallbackQueryHandler(button, pass_groups=True))
     updater.start_polling(clean=True)
 
