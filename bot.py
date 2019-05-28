@@ -50,44 +50,13 @@ def list_handler(bot, update):
 
 def add_user_handler(bot, update):
     bot_utils.delete_message(bot, update.message.chat_id, update.message.message_id)
-    user = update.message.text
-    if (user == '/add_user'):
-        bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C Missing user id")
-    else:
-        user = user.split(' ')
-        if len(user) == 3:
-            if auth.is_admin(update.message.chat_id):
-                if not config.user_exist(user[1]):
-                    config.add_user(user[1], user[2])
-                    bot_utils.send_and_delete(bot, update.message.chat_id, "\U00002705 User created succesfully")
-                else:
-                    bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C User already exists")
-            else:
-                 bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C You don't have the permission to do this operation")
-        else:
-            bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C Wrong command arguments format")
+    message = bot_utils.add_user(bot, update)
+    bot_utils.send_and_delete(bot, message['chat_id'], message['text'])
 
 def remove_user_handler(bot, update):
     bot_utils.delete_message(bot, update.message.chat_id, update.message.message_id)
-    user = update.message.text
-    if (user == '/remove_user'):
-        bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C Missing user id")
-    else:
-        user = user.split(' ')
-        if len(user) == 2:
-            if auth.is_admin(update.message.chat_id):
-                if str(user[1]) == str(update.message.chat_id):
-                    bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C You cannot delete yourself")
-                    return
-                if config.user_exist(user[1]):
-                    config.delete_user(user[1])
-                    bot_utils.send_and_delete(bot, update.message.chat_id, "\U00002705 User deleted succesfully")
-                else:
-                    bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C User does not exists")
-            else:
-                 bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C You don't have the permission to do this operation")
-        else:
-            bot_utils.send_and_delete(bot, update.message.chat_id, "\U0000274C Wrong command arguments format")
+    message = bot_utils.remove_user(bot, update)
+    bot_utils.send_and_delete(bot, message['chat_id'], message['text'])
 
 def button(bot, update):
     user_id = update.callback_query.message.chat_id
