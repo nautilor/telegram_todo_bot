@@ -11,6 +11,7 @@ class todo_handler:
         return str(uuid.uuid1())[:8]
 
     def get_todos(self, user):
+        self.config = config()
         return self.config.get_user(user)['todos']
 
     def add_todo(self, user, todo):
