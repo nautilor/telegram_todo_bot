@@ -59,36 +59,12 @@ def remove_user_handler(bot, update):
     bot_utils.send_and_delete(bot, message['chat_id'], message['text'])
 
 def button(bot, update):
-    user_id = update.callback_query.message.chat_id
-    callback = update.callback_query
-    parse_callback_data(bot, user_id, callback)
+   message =  bot_utils.parse_callback_data(bot, update)
 
 def new_handler(bot, update):
     bot_utils.delete_message(bot, update.message.chat_id, update.message.message_id)
-    logger.log(msg='new todo from user %s' % update.message.chat_id, level=logging.INFO)
-    if auth.is_authorized(update.message.chat_id):
-        todo = update.message.text
-        if (todo == '/new'):
-            bot_utils.missing_todo(bot, update)
-        else:
-            handler.add_todo(update.message.chat_id, todo.replace('/new ', ''))
-            bot_utils.send_and_delete(bot, update.message.chat_id, "\U00002705 Todo created succesfully")
-    else:
-        bot_utils.unauthorized_user(bot, update)
-
-def parse_callback_data(bot, user, callback):
-    data = callback.data
-    if 'done' == data[:4]:
-        data = re.sub("done_", '', data)
-        bot.edit_message_reply_markup(chat_id=callback.message.chat_id,
-                message_id=callback.message.message_id, reply_markup=bot_utils.done_menu(data))
-        bot_utils.done_todo(user, data)
-
-
-    if 'delete' == data[:6]:
-        data = re.sub('delete_', '', data)
-        bot_utils.delete_message(bot, update.message.chat_id, update.message.message_id)
-        bot_utils.delete_todo(user, data)
+    message = bot_utils.add_todo(bot, update)
+    bot_utils.send_and_delete(bot, message['chat_id'], message['text'])
 
 if __name__ == "__main__":
     token = config.get_bot_api()

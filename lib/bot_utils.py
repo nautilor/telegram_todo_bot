@@ -23,6 +23,22 @@ class bot_utils:
         self.handler = todo_handler();
         self.config = config()
 
+    def add_todo(self, bot, update):
+        logger.log(msg='new todo from user %s' % update.message.chat_id, level=logging.INFO)
+        if self.authorization.is_authorized(update.message.chat_id):
+            todo = update.message.text
+            if (todo == '/new'):
+                message = {'chat_id':  update.message.chat_id,
+                                'text': '\U0000274C Missing todo content'}
+            else:
+                self.handler.add_todo(update.message.chat_id, todo.replace('/new ', ''))
+                message = {'chat_id':  update.message.chat_id,
+                                'text': '\U00002705 Todo created succesfully'}
+        else:
+            message = {'chat_id':  update.message.chat_id,
+                                'text': "\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot"}
+        return message
+
     def delete_message(self, bot, chat_id, message_id, timeout=0):
         sleep(timeout)
         bot.delete_message(chat_id=chat_id, message_id=message_id)
@@ -105,3 +121,27 @@ class bot_utils:
             else:
                 message = { 'chat_id': update.message.chat_id, 'text': '\U0000274C Wrong command arguments format' }
         return message
+
+    def is_group(self, chat_type):
+        return chat_type != 'private' 
+    
+    def is_group_admin(self, bot, chat_id, user_id):
+        for user in bot.get_chat_administrators(chat_id):
+            if user.user.id == user_id:
+                return True
+        return False
+    
+    def parse_callback_data(self, bot, update):
+        if self.is_group(update.callback_query.message.chat.type) and not self.is_group_admin(bot, update.callback_query.message.chat.id, update.callback_query.from_user.id):
+            self.send_and_delete(bot, update.callback_query.message.chat_id, "\U0000274C %s You're not a group admin" % update.callback_query.from_user.username)
+            return
+        if 'done' == update.callback_query.data[:4]:
+            data = re.sub("done_", '', update.callback_query.data)
+            bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+                    message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
+            self.done_todo(update.callback_query.from_user.id, data)
+
+        if 'delete' ==  update.callback_query.data[:6]:
+            data = re.sub('delete_', '',  update.callback_query.data)
+            self.delete_message(bot, update.callback_query.message.chat_id, update.callback_query.message.message_id)
+            self.delete_todo(update.callback_query.message.chat_id, data)
