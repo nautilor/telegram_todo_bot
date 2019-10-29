@@ -45,7 +45,8 @@ class bot_utils:
 
     def done_menu(self, key):
         delete = InlineKeyboardButton(text="\U00002716 Delete", callback_data="delete_%s" % key)
-        return InlineKeyboardMarkup([[delete]])
+        amend = InlineKeyboardButton(text="\U00002716 Undone",callback_data="undone_%s" % key)
+        return InlineKeyboardMarkup([[delete, amend]])
 
     def todo_menu(self, key):
         done = InlineKeyboardButton(text="\U00002714 Done",callback_data="done_%s" % key)
@@ -75,6 +76,10 @@ class bot_utils:
     def done_todo(self, user, key):
          logger.log(msg='done message %s from user %s' % (key, user), level=logging.INFO)
          self.handler.complete_todo(user, key)
+    
+    def amend_todo(self, user, key):
+         logger.log(msg='amending message %s from user %s' % (key, user), level=logging.INFO)
+         self.handler.amend_todo(user, key)
 
     def remove_user(self, bot, update):
         self.config = config()
@@ -140,6 +145,12 @@ class bot_utils:
             bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
                     message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
             self.done_todo(update.callback_query.from_user.id, data)
+        
+        if 'undone' == update.callback_query.data[:4]:
+            data = re.sub("undone_", '', update.callback_query.data)
+            bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+                    message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
+            self.amend_todo(update.callback_query.from_user.id, data)
 
         if 'delete' ==  update.callback_query.data[:6]:
             data = re.sub('delete_', '',  update.callback_query.data)

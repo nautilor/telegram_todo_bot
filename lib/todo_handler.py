@@ -31,6 +31,14 @@ class todo_handler:
         except Exception:
             return
 
+    def amend_todo(self, user, key):
+        try:
+            todos = self.get_todos(user)
+            todos[key]['done'] = 0
+            self.config.update()
+        except Exception:
+            return
+
     def delete_todo(self, user, todo):
         try:
             todos = self.get_todos(user)
