@@ -45,7 +45,7 @@ class bot_utils:
 
     def done_menu(self, key):
         delete = InlineKeyboardButton(text="\U00002716 Delete", callback_data="delete_%s" % key)
-        amend = InlineKeyboardButton(text="\U00002716 Undone",callback_data="undone_%s" % key)
+        amend = InlineKeyboardButton(text="\U0001F519 Undone",callback_data="undone_%s" % key)
         return InlineKeyboardMarkup([[delete, amend]])
 
     def todo_menu(self, key):
@@ -137,6 +137,7 @@ class bot_utils:
         return False
     
     def parse_callback_data(self, bot, update):
+        print(update.callback_query.data)
         if self.is_group(update.callback_query.message.chat.type) and not self.is_group_admin(bot, update.callback_query.message.chat.id, update.callback_query.from_user.id):
             self.send_and_delete(bot, update.callback_query.message.chat_id, "\U0000274C %s You're not a group admin" % update.callback_query.from_user.username)
             return
@@ -146,10 +147,10 @@ class bot_utils:
                     message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
             self.done_todo(update.callback_query.from_user.id, data)
         
-        if 'undone' == update.callback_query.data[:4]:
+        if 'undone' == update.callback_query.data[:6]:
             data = re.sub("undone_", '', update.callback_query.data)
             bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
-                    message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
+                    message_id=update.callback_query.message.message_id, reply_markup=self.todo_menu(data))
             self.amend_todo(update.callback_query.from_user.id, data)
 
         if 'delete' ==  update.callback_query.data[:6]:

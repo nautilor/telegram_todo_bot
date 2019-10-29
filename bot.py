@@ -44,7 +44,8 @@ def list_handler(bot, update):
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = bot_utils.done_menu(todo) if todos[todo]['done'] == 1 else bot_utils.todo_menu(todo)
-                bot_utils.send_and_delete(bot, update.message.chat_id, todos[todo]['description'], reply_markup=markup)
+                message = todos[todo]['description'] if todos[todo]['done'] == 0 else "%s" % (todos[todo]['description'])
+                bot_utils.send_and_delete(bot, update.message.chat_id, message, reply_markup=markup)
     else:
         bot_utils.unauthorized_user(bot, update)
 
@@ -59,7 +60,7 @@ def remove_user_handler(bot, update):
     bot_utils.send_and_delete(bot, message['chat_id'], message['text'])
 
 def button(bot, update):
-   message =  bot_utils.parse_callback_data(bot, update)
+   message = bot_utils.parse_callback_data(bot, update)
 
 def new_handler(bot, update):
     bot_utils.delete_message(bot, update.message.chat_id, update.message.message_id)
