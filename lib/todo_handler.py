@@ -5,7 +5,7 @@ from .config import config
 
 class todo_handler:
     def __init__(self):
-      self.config = config();
+      self.config = config()
 
     def generate_todo_key(self):
         return str(uuid.uuid1())[:8]

@@ -44,23 +44,23 @@ class bot_utils:
         bot.delete_message(chat_id=chat_id, message_id=message_id)
 
     def done_menu(self, key):
-        delete = InlineKeyboardButton(text="\U00002716 Delete", callback_data="delete_%s" % key)
         amend = InlineKeyboardButton(text="\U0001F519 Undone",callback_data="undone_%s" % key)
-        return InlineKeyboardMarkup([[delete, amend]])
+        delete = InlineKeyboardButton(text="\U00002716 Delete", callback_data="delete_%s" % key)
+        return InlineKeyboardMarkup([[amend, delete]])
 
     def todo_menu(self, key):
-        done = InlineKeyboardButton(text="\U00002714 Done",callback_data="done_%s" % key)
-        delete = InlineKeyboardButton(text="\U00002716 Delete",callback_data="delete_%s" % key)
+        done = InlineKeyboardButton(text="\U00002714 Done", callback_data="done_%s" % key)
+        delete = InlineKeyboardButton(text="\U00002716 Delete", callback_data="delete_%s" % key)
         return InlineKeyboardMarkup([[done, delete]])
 
-    def send_and_delete(self, bot, chat_id, text, reply_markup=None, timeout=900): # 2700 = 45min
-        message = self.send_message(bot, chat_id, text, reply_markup)
+    def send_and_delete(self, bot, chat_id, text, reply_markup=None, parse_mode=ParseMode.HTML, timeout=900): # 2700 = 45min
+        message = self.send_message(bot, chat_id, text, reply_markup, parse_mode)
         thread = threading.Thread(target=self.delete_message, args=(bot, chat_id, message.message_id, timeout))
         thread.start()
 
-    def send_message(self, bot, chat_id, text, reply_markup=None):
+    def send_message(self, bot, chat_id, text, reply_markup=None, parse_mode=ParseMode.HTML):
         return bot.send_message(chat_id=chat_id, text=text,
-                disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+                disable_web_page_preview=True, parse_mode=parse_mode, reply_markup=reply_markup)
 
     def missing_todo(self, bot, update):
         self.send_and_delete(bot, update.message.chat.id, text="\U0000274C No text provided \U0000274C")
@@ -143,14 +143,18 @@ class bot_utils:
             return
         if 'done' == update.callback_query.data[:4]:
             data = re.sub("done_", '', update.callback_query.data)
-            bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+            bot.edit_message_text(text="\U00002705 %s" % update.callback_query.message.text, chat_id=update.callback_query.message.chat_id, 
                     message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
+            #bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+            #        message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
             self.done_todo(update.callback_query.from_user.id, data)
         
         if 'undone' == update.callback_query.data[:6]:
             data = re.sub("undone_", '', update.callback_query.data)
-            bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
+            bot.edit_message_text(text=update.callback_query.message.text[2:] ,chat_id=update.callback_query.message.chat_id, 
                     message_id=update.callback_query.message.message_id, reply_markup=self.todo_menu(data))
+            #bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id, 
+            #        message_id=update.callback_query.message.message_id, reply_markup=self.todo_menu(data))
             self.amend_todo(update.callback_query.from_user.id, data)
 
         if 'delete' ==  update.callback_query.data[:6]:
