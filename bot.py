@@ -25,7 +25,7 @@ bot_utils = bot_utils()
 def start_handler(bot, update):
     bot.delete_message(chat_id=update.message.chat_id, message_id=update.message.message_id)
     if not auth.is_authorized(update.message.chat_id):
-        unauthorized_user(bot, update)
+        bot_utils.unauthorized_user(bot, update)
         return
     bot_utils.send_and_delete(bot, update.message.chat_id, text="\U0001F60A Welcome")
 
