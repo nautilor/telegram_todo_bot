@@ -44,7 +44,7 @@ def list_handler(bot, update):
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = bot_utils.done_menu(todo) if todos[todo]['done'] == 1 else bot_utils.todo_menu(todo)
-                message = todos[todo]['description'] if todos[todo]['done'] == 0 else "\U00002705 <del>%s</del>" % (todos[todo]['description'])
+                message = todos[todo]['description'] if todos[todo]['done'] == 0 else "\U00002705 %s" % (todos[todo]['description'])
                 bot_utils.send_and_delete(bot, update.message.chat_id, message, reply_markup=markup)
     else:
         bot_utils.unauthorized_user(bot, update)
