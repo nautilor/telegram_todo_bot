@@ -5,6 +5,7 @@ import logging
 from lib.config import config
 from lib.todo_handler import todo_handler
 from lib.authorization import authorization
+from lib.logger import Logger
 from lib.bot_utils import bot_utils
 from telegram.ext import Updater, Filters, MessageHandler, CommandHandler, CallbackQueryHandler
 from telegram.parsemode import ParseMode
@@ -13,10 +14,7 @@ from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
 from time import sleep
 import threading
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = Logger()
 config = config()
 handler = todo_handler()
 auth = authorization()
@@ -36,7 +34,7 @@ def info_handler(bot, update):
 
 def list_handler(bot, update):
     bot_utils.delete_message(bot, update.message.chat_id, update.message.message_id)
-    logger.log(msg='list command from user %s' % update.message.chat_id, level=logging.INFO)
+    logger.info('list command from user %s' % update.message.chat_id)
     if auth.is_authorized(update.message.chat_id):
         todos = handler.get_todos(update.message.chat_id)
         if  todos == {}:
@@ -44,7 +42,7 @@ def list_handler(bot, update):
         else:
             for todo in todos: # TODO: strike the todo that are done
                 markup = bot_utils.done_menu(todo) if todos[todo]['done'] == 1 else bot_utils.todo_menu(todo)
-                message = todos[todo]['description'] if todos[todo]['done'] == 0 else "\U00002705 %s" % (todos[todo]['description'])
+                message = f"{todos[todo]['description']}" if todos[todo]['done'] == 0 else "\U00002705 <strike>%s</strike>" % (todos[todo]['description'])
                 bot_utils.send_and_delete(bot, update.message.chat_id, message, reply_markup=markup)
     else:
         bot_utils.unauthorized_user(bot, update)

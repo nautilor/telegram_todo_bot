@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from .config import config
+from lib.config import config
 
 class authorization:
     def __init__(self):

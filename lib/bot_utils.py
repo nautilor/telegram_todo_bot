@@ -2,29 +2,28 @@
 
 import re
 import logging
-from .authorization import authorization
-from .todo_handler import todo_handler
-from .config import config
+from lib.authorization import authorization
+from lib.todo_handler import todo_handler
+from lib.config import config
 from telegram.ext import Updater, Filters, MessageHandler, CommandHandler, CallbackQueryHandler
 from telegram.parsemode import ParseMode
 from telegram.inline.inlinekeyboardbutton import InlineKeyboardButton
 from telegram.inline.inlinekeyboardmarkup import InlineKeyboardMarkup
 from time import sleep
+from lib.logger import Logger
 import threading
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = Logger()
 
 
 class bot_utils:
     def __init__(self):
-        self.authorization = authorization();
-        self.handler = todo_handler();
+        self.authorization = authorization()
+        self.handler = todo_handler()
         self.config = config()
 
     def add_todo(self, bot, update):
-        logger.log(msg='new todo from user %s' % update.message.chat_id, level=logging.INFO)
+        logger.info('new todo from user %s' % update.message.chat_id)
         if self.authorization.is_authorized(update.message.chat_id):
             todo = update.message.text
             if (todo == '/new'):
@@ -54,7 +53,7 @@ class bot_utils:
         return InlineKeyboardMarkup([[done, delete]])
 
     def send_and_delete(self, bot, chat_id, text, reply_markup=None, parse_mode=ParseMode.HTML, timeout=900): # 2700 = 45min
-        message = self.send_message(bot, chat_id, text, reply_markup, parse_mode)
+        message = self.send_message(bot, chat_id, text, reply_markup, parse_mode=parse_mode)
         thread = threading.Thread(target=self.delete_message, args=(bot, chat_id, message.message_id, timeout))
         thread.start()
 
@@ -70,15 +69,15 @@ class bot_utils:
                 text="\U0001F6AB This is a personal bot, for more info visit\nhttps://github.com/nautilor/telegram\_todo\_bot")
 
     def delete_todo(self, user, key):
-        logger.log(msg='deleted message %s from user %s' % (key, user), level=logging.INFO)
+        logger.info('deleted message %s from user %s' % (key, user))
         self.handler.delete_todo(user, key)
 
     def done_todo(self, user, key):
-         logger.log(msg='done message %s from user %s' % (key, user), level=logging.INFO)
+         logger.info('done message %s from user %s' % (key, user))
          self.handler.complete_todo(user, key)
     
     def amend_todo(self, user, key):
-         logger.log(msg='amending message %s from user %s' % (key, user), level=logging.INFO)
+         logger.info('amending message %s from user %s' % (key, user))
          self.handler.amend_todo(user, key)
 
     def remove_user(self, bot, update):
@@ -137,24 +136,19 @@ class bot_utils:
         return False
     
     def parse_callback_data(self, bot, update):
-        print(update.callback_query.data)
         if self.is_group(update.callback_query.message.chat.type) and not self.is_group_admin(bot, update.callback_query.message.chat.id, update.callback_query.from_user.id):
             self.send_and_delete(bot, update.callback_query.message.chat_id, "\U0000274C %s You're not a group admin" % update.callback_query.from_user.username)
             return
         if 'done' == update.callback_query.data[:4]:
             data = re.sub("done_", '', update.callback_query.data)
-            bot.edit_message_text(text="\U00002705 %s" % update.callback_query.message.text, chat_id=update.callback_query.message.chat_id, 
-                    message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
-            #bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id,
-            #        message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data))
+            bot.edit_message_text(text="\U00002705 <strike>%s</strike>" % update.callback_query.message.text, chat_id=update.callback_query.message.chat_id, 
+                    message_id=update.callback_query.message.message_id, reply_markup=self.done_menu(data), parse_mode="HTML")
             self.done_todo(update.callback_query.message.chat_id, data)
         
         if 'undone' == update.callback_query.data[:6]:
             data = re.sub("undone_", '', update.callback_query.data)
             bot.edit_message_text(text=update.callback_query.message.text[2:] ,chat_id=update.callback_query.message.chat_id, 
                     message_id=update.callback_query.message.message_id, reply_markup=self.todo_menu(data))
-            #bot.edit_message_reply_markup(chat_id=update.callback_query.message.chat_id, 
-            #        message_id=update.callback_query.message.message_id, reply_markup=self.todzo_menu(data))
             self.amend_todo(update.callback_query.message.chat_id, data)
 
         if 'delete' ==  update.callback_query.data[:6]:
