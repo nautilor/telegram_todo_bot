@@ -5,12 +5,13 @@ from .config import config
 
 class todo_handler:
     def __init__(self):
-      self.config = config();
+      self.config = config()
 
     def generate_todo_key(self):
         return str(uuid.uuid1())[:8]
 
     def get_todos(self, user):
+        self.config = config()
         return self.config.get_user(user)['todos']
 
     def add_todo(self, user, todo):
@@ -26,6 +27,14 @@ class todo_handler:
         try:
             todos = self.get_todos(user)
             todos[key]['done'] = 1
+            self.config.update()
+        except Exception:
+            return
+
+    def amend_todo(self, user, key):
+        try:
+            todos = self.get_todos(user)
+            todos[key]['done'] = 0
             self.config.update()
         except Exception:
             return
